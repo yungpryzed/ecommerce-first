@@ -1,166 +1,62 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname } from 'next/navigation';
-import { useSession, signOut } from 'next-auth/react';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
+import { logout } from '../../store/slices/authSlice';
 import React from 'react';
 
 const Header = () => {
-  const { data: session } = useSession();
-  const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const dispatch = useDispatch();
+  const { userInfo } = useSelector((state: RootState) => state.auth);
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
+  const logoutHandler = () => {
+    dispatch(logout());
   };
 
   return (
-    <header className="bg-white shadow-sm">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center">
-            <span className="text-xl font-bold text-primary">RistoTools</span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            <Link 
-              href="/" 
-              className={`text-sm font-medium transition ${pathname === '/' ? 'text-accent' : 'text-gray-600 hover:text-gray-900'}`}
-            >
-              Home
+    <header className="bg-indigo-600">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Top">
+        <div className="w-full py-6 flex items-center justify-between border-b border-indigo-500 lg:border-none">
+          <div className="flex items-center">
+            <Link href="/" className="text-white font-bold text-xl">
+              E-commerce
             </Link>
-            <Link 
-              href="/products" 
-              className={`text-sm font-medium transition ${pathname.startsWith('/products') ? 'text-accent' : 'text-gray-600 hover:text-gray-900'}`}
-            >
-              Prodotti
-            </Link>
-            <Link 
-              href="/categories" 
-              className={`text-sm font-medium transition ${pathname.startsWith('/categories') ? 'text-accent' : 'text-gray-600 hover:text-gray-900'}`}
-            >
-              Categorie
-            </Link>
-          </nav>
-
-          {/* User Menu */}
-          <div className="hidden md:flex items-center">
-            {session ? (
+            <div className="ml-10 space-x-8">
+              <Link href="/products" className="text-base font-medium text-white hover:text-indigo-50">
+                Prodotti
+              </Link>
+            </div>
+          </div>
+          <div className="ml-10 space-x-4">
+            {userInfo ? (
               <div className="flex items-center">
-                <Link href="/account" className="text-sm font-medium text-gray-600 hover:text-gray-900 mr-6">
-                  Il mio Account
-                </Link>
-                {/*session.user.isAdmin &&*/ (
-                  <Link href="/admin" className="text-sm font-medium text-gray-600 hover:text-gray-900 mr-6">
+                <span className="text-white mr-4">Ciao, {userInfo.name}</span>
+                {userInfo.isAdmin && (
+                  <Link href="/admin" className="text-base font-medium text-white hover:text-indigo-50 mr-4">
                     Admin
                   </Link>
                 )}
                 <button
-                  onClick={() => signOut()}
-                  className="text-sm font-medium text-gray-600 hover:text-gray-900"
+                  onClick={logoutHandler}
+                  className="inline-block bg-white py-2 px-4 border border-transparent rounded-md text-base font-medium text-indigo-600 hover:bg-indigo-50"
                 >
                   Logout
                 </button>
               </div>
             ) : (
-              <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900">
-                Login / Registrati
-              </Link>
-            )}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            type="button"
-            className="md:hidden p-2 rounded-md text-gray-600"
-            onClick={toggleMobileMenu}
-            aria-expanded="false"
-          >
-            <span className="sr-only">Apri menu</span>
-            <svg
-              className="h-6 w-6"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <Link 
-              href="/" 
-              className={`block px-3 py-2 rounded-md text-base font-medium ${pathname === '/' ? 'text-accent' : 'text-gray-600 hover:text-gray-900'}`}
-              onClick={toggleMobileMenu}
-            >
-              Home
-            </Link>
-            <Link 
-              href="/products" 
-              className={`block px-3 py-2 rounded-md text-base font-medium ${pathname.startsWith('/products') ? 'text-accent' : 'text-gray-600 hover:text-gray-900'}`}
-              onClick={toggleMobileMenu}
-            >
-              Prodotti
-            </Link>
-            <Link 
-              href="/categories" 
-              className={`block px-3 py-2 rounded-md text-base font-medium ${pathname.startsWith('/categories') ? 'text-accent' : 'text-gray-600 hover:text-gray-900'}`}
-              onClick={toggleMobileMenu}
-            >
-              Categorie
-            </Link>
-
-            {session ? (
               <>
-                <Link 
-                  href="/account" 
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900"
-                  onClick={toggleMobileMenu}
-                >
-                  Il mio Account
+                <Link href="/login" className="inline-block bg-indigo-500 py-2 px-4 border border-transparent rounded-md text-base font-medium text-white hover:bg-opacity-75">
+                  Accedi
                 </Link>
-                {/*session.user.isAdmin &&*/ (
-                  <Link 
-                    href="/admin" 
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900"
-                    onClick={toggleMobileMenu}
-                  >
-                    Admin
-                  </Link>
-                )}
-                <button
-                  onClick={() => {
-                    signOut();
-                    toggleMobileMenu();
-                  }}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900"
-                >
-                  Logout
-                </button>
+                <Link href="/register" className="inline-block bg-white py-2 px-4 border border-transparent rounded-md text-base font-medium text-indigo-600 hover:bg-indigo-50">
+                  Registrati
+                </Link>
               </>
-            ) : (
-              <Link 
-                href="/login" 
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-900"
-                onClick={toggleMobileMenu}
-              >
-                Login / Registrati
-              </Link>
             )}
           </div>
         </div>
-      )}
+      </nav>
     </header>
   );
 };

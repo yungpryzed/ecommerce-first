@@ -1,99 +1,96 @@
-const userService = require('../services/userService');
+const asyncHandler = require('express-async-handler');
+const User = require('../models/userModel');
 const generateToken = require('../utils/generateToken');
 
-// Autenticare utente e ottenere token
-const loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const user = await userService.getUserByEmail(email);
-    
-    if (user && (await user.matchPassword(password))) {
-      res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        isAdmin: user.isAdmin,
-        token: generateToken(user._id),
-      });
-    } else {
-      res.status(401).json({ message: 'Email o password non validi' });
-    }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+// @desc    Auth user & get token
+// @route   POST /api/users/login
+// @access  Public
+const loginUser = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
 
-// Registrare un nuovo utente
-const registerUser = async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
-    
-    const userExists = await userService.getUserByEmail(email);
-    
-    if (userExists) {
-      res.status(400).json({ message: 'Utente già esistente' });
-      return;
-    }
-    
-    const user = await userService.createUser({
-      name,
-      email,
-      password,
+  const user = await User.findOne({ email });
+
+  if (user && (await user.matchPassword(password))) {
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      isAdmin: user.isAdmin,
+      token: generateToken(user._id),
     });
-    
-    if (user) {
-      res.status(201).json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        isAdmin: user.isAdmin,
-        token: generateToken(user._id),
-      });
-    } else {
-      res.status(400).json({ message: 'Dati utente non validi' });
-    }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } else {
+    res.status(401);
+    throw new Error('Email o password non validi');
   }
-};
+});
 
-// Ottenere il profilo utente
-const getUserProfile = async (req, res) => {
-  try {
-    const user = await userService.getUserById(req.user._id);
-    
-    if (!user) {
-      res.status(404).json({ message: 'Utente non trovato' });
-      return;
-    }
-    
+// @desc    Register a new user
+// @route   POST /api/users/register
+// @access  Public
+const registerUser = asyncHandler(async (req, res) => {
+  const { name, email, password } = req.body;
+
+  const userExists = await User.findOne({ email });
+
+  if (userExists) {
+    res.status(400);
+    throw new Error('Utente già esistente');
+  }
+
+  const user = await User.create({
+    name,
+    email,
+    password,
+  });
+
+  if (user) {
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      isAdmin: user.isAdmin,
+      token: generateToken(user._id),
+    });
+  } else {
+    res.status(400);
+    throw new Error('Dati utente non validi');
+  }
+});
+
+// @desc    Get user profile
+// @route   GET /api/users/profile
+// @access  Private
+const getUserProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (user) {
     res.json({
       _id: user._id,
       name: user.name,
       email: user.email,
       isAdmin: user.isAdmin,
     });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } else {
+    res.status(404);
+    throw new Error('Utente non trovato');
   }
-};
+});
 
-// Aggiornare il profilo utente
-const updateUserProfile = async (req, res) => {
-  try {
-    const user = await userService.getUserById(req.user._id);
-    
-    if (!user) {
-      res.status(404).json({ message: 'Utente non trovato' });
-      return;
+// @desc    Update user profile
+// @route   PUT /api/users/profile
+// @access  Private
+const updateUserProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (user) {
+    user.name = req.body.name || user.name;
+    user.email = req.body.email || user.email;
+    if (req.body.password) {
+      user.password = req.body.password;
     }
-    
-    const updatedUser = await userService.updateUser(user._id, {
-      name: req.body.name || user.name,
-      email: req.body.email || user.email,
-      password: req.body.password || user.password,
-    });
-    
+
+    const updatedUser = await user.save();
+
     res.json({
       _id: updatedUser._id,
       name: updatedUser.name,
@@ -101,84 +98,73 @@ const updateUserProfile = async (req, res) => {
       isAdmin: updatedUser.isAdmin,
       token: generateToken(updatedUser._id),
     });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } else {
+    res.status(404);
+    throw new Error('Utente non trovato');
   }
-};
+});
 
-// Ottenere tutti gli utenti (admin)
-const getUsers = async (req, res) => {
-  try {
-    const users = await userService.getUsers();
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+// @desc    Get all users
+// @route   GET /api/users
+// @access  Private/Admin
+const getUsers = asyncHandler(async (req, res) => {
+  const users = await User.find({});
+  res.json(users);
+});
+
+// @desc    Get user by ID
+// @route   GET /api/users/:id
+// @access  Private/Admin
+const getUserById = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id).select('-password');
+
+  if (user) {
+    res.json(user);
+  } else {
+    res.status(404);
+    throw new Error('Utente non trovato');
   }
-};
+});
 
-// Ottenere un utente per ID (admin)
-const getUserById = async (req, res) => {
-  try {
-    const user = await userService.getUserById(req.params.id);
-    
-    if (!user) {
-      res.status(404).json({ message: 'Utente non trovato' });
-      return;
-    }
-    
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      isAdmin: user.isAdmin,
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+// @desc    Update user
+// @route   PUT /api/users/:id
+// @access  Private/Admin
+const updateUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
 
-// Aggiornare un utente (admin)
-const updateUser = async (req, res) => {
-  try {
-    const user = await userService.getUserById(req.params.id);
-    
-    if (!user) {
-      res.status(404).json({ message: 'Utente non trovato' });
-      return;
-    }
-    
-    const updatedUser = await userService.updateUser(req.params.id, {
-      name: req.body.name || user.name,
-      email: req.body.email || user.email,
-      isAdmin: req.body.isAdmin !== undefined ? req.body.isAdmin : user.isAdmin,
-    });
-    
+  if (user) {
+    user.name = req.body.name || user.name;
+    user.email = req.body.email || user.email;
+    user.isAdmin = req.body.isAdmin === undefined ? user.isAdmin : req.body.isAdmin;
+
+    const updatedUser = await user.save();
+
     res.json({
       _id: updatedUser._id,
       name: updatedUser.name,
       email: updatedUser.email,
       isAdmin: updatedUser.isAdmin,
     });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } else {
+    res.status(404);
+    throw new Error('Utente non trovato');
   }
-};
+});
 
-// Eliminare un utente (admin)
-const deleteUser = async (req, res) => {
-  try {
-    const deletedUser = await userService.deleteUser(req.params.id);
-    
-    if (!deletedUser) {
-      res.status(404).json({ message: 'Utente non trovato' });
-      return;
-    }
-    
-    res.json({ message: 'Utente rimosso con successo' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+// @desc    Delete user
+// @route   DELETE /api/users/:id
+// @access  Private/Admin
+const deleteUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+
+  if (user) {
+    await user.deleteOne();
+    res.json({ message: 'Utente rimosso' });
+  } else {
+    res.status(404);
+    throw new Error('Utente non trovato');
   }
-};
+});
 
 module.exports = {
   loginUser,
@@ -188,5 +174,5 @@ module.exports = {
   getUsers,
   getUserById,
   updateUser,
-  deleteUser
+  deleteUser,
 };
