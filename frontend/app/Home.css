@@ -1,0 +1,122 @@
+/* Stili per la sezione dei prodotti in evidenza */
+.featured-products {
+  padding: 0 0 40px 0;
+  background-color: #f9fafb;
+  text-align: center; /* Centra il titolo */
+}
+
+/* Container originale, lasciamo invariato per non influire sulla navbar */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Aggiunto nuovo stile specifico per il container dei prodotti */
+.featured-products .container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.section-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  text-align: center;
+  color: #1f2937;
+  margin-bottom: 40px;
+  width: 100%;
+}
+
+/* Griglia dei prodotti */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* Card del prodotto */
+.product-card {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Immagine del prodotto */
+.product-image {
+  height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6;
+}
+
+.product-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Informazioni del prodotto */
+.product-info {
+  padding: 20px;
+}
+
+.product-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.product-price {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #3b82f6;
+  margin-bottom: 16px;
+}
+
+/* Pulsante Aggiungi al Carrello */
+.add-to-cart-button {
+  width: 100%;
+  background-color: #3b82f6;
+  color: white;
+  padding: 10px 0;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.add-to-cart-button:hover {
+  background-color: #2563eb;
+}
+
+/* Responsive per tablet e mobile */
+@media (max-width: 768px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .products-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+    margin-bottom: 30px;
+  }
+}

@@ -20,19 +20,19 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       required: true,
       default: false,
-    }
+    },
   },
   {
     timestamps: true,
   }
 );
 
-// Metodo per comparare le password
+// Match user entered password to hashed password in database
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Middleware per hashare la password prima di salvare
+// Encrypt password using bcrypt
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     next();
